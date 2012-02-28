@@ -1,0 +1,66 @@
+from constants import *
+import math
+
+class Token:
+	def __init__(self, type, color):
+		self.type = type
+		self.color = color
+		self.dragged = False
+		self.i, self.j = -1, -1
+		if self.type == 'circle':
+			self.shape = sf.Shape.Circle(0, 0, token_radius, color)
+			self.shape.SetCenter(box_width/2, box_height/2)
+		elif self.type =='rect':
+			self.shape = sf.Shape.Rectangle(0, 0, box_width, box_height, color)
+			self.shape.SetCenter(box_width/2, box_height/2)
+
+	def draw(self, window, x=None, y=None):
+		if x and y:
+			self.shape.SetPosition(x, y)
+
+		window.Draw(self.shape)
+
+	def center(self):
+		position = self.shape.GetPosition()
+		
+		center = self.shape.GetCenter()
+		x, y = position[0] + center[0], position[1] + center[1]
+		return position
+
+	def set_center(self, px, py):
+		center = self.shape.GetCenter()
+		#print "px, py = ", px, py, " center = ", center
+		#print "x, y = ", x, y
+
+		if self.type == 'circle' and False: 
+			x, y = px - center[0], py - center[1]
+		else:
+			x, y = px, py
+
+		self.shape.SetPosition(x, y)
+		
+
+	def update(self, InputHandler, window):
+		if self.dragged:
+			print " call me darh"
+			mx, my = window.ConvertCoords(InputHandler.GetMouseX(), InputHandler.GetMouseY())
+			self.set_center(mx, my)
+
+		print "Shape Position = %s Center = %s " % (self.shape.GetPosition(), self.shape.GetCenter())
+
+	def mouse_over(self, InputHandler, window):
+		x, y = window.ConvertCoords(InputHandler.GetMouseX(), InputHandler.GetMouseY())
+		cx, cy = self.center()
+		if self.type == 'circle':
+			return math.sqrt((cx - x)**2 + (cy - y)**2) < token_radius
+
+		elif self.type == 'rect':
+			cx, cy = self.shape.GetPosition()
+			center = self.shape.GetCenter()
+			cx  -= center[0]
+			cy -= center[1]
+			cx, cy = int(cx), int(cy)
+			x, y = int(x), int(y)
+			rect = sf.IntRect(cx, cy, cx + box_width, cy + box_width)
+
+			return rect.Contains(x, y)
